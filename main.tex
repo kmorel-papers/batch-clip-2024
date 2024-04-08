@@ -142,9 +142,7 @@ $^3$Oak Ridge National Laboratory, USA
 }
 % ------------------------------------------------------------------------
 
-\newcommand*{\fix}[1]{\textcolor{red}{\textbf{#1}}}
-\definecolor{kencolor}{RGB}{105, 41, 197}
-\newcommand*{\ken}[1]{\textcolor{kencolor}{\textbf{#1} -- Ken}}
+\newcommand*{\fix}[1]{\textcolor{red}{#1}}
 
 
 %-------------------------------------------------------------------------
@@ -244,28 +242,28 @@ Clipping algorithms are typically implemented by processing the cells of a mesh.
 
 The VTK library's \cite{VTK} first clip algorithm, which is still available today within the \texttt{vtkClipDataSet} class, has a single pass. During this pass, the algorithm fully extracts each input cell, computes the case index to access a case table, and generates output cells and points, incrementally. Notably, a point locator is employed to identify duplicate points before they are incrementally added. This algorithm exhibits three noteworthy deficiencies:
 
-\begin{enumerate}
-    \item \textbf{Full Extraction of Each Cell}: The algorithm fully extracts each cell, including not only the point IDs but also its actual points, leading to increased memory accesses. These points are necessary for unique insertion into the point locator.
-    \item \textbf{Use of Point Locator}: The algorithm relies on a point locator, introducing additional computational overhead.
-    \item \textbf{Incrementally Built Data Structures}: The algorithm relies on incrementally building data structures by inserting cells and points while ensuring unique point insertion, thereby impeding independent processing. This incremental approach significantly affects the algorithm's scalability and prevents parallelization. Additionally, this leads to incremental memory allocations, contributing to potential inefficiencies in memory usage.
-\end{enumerate}
+\begin{itemize}
+    \item \fix{\textit{Full Extraction of Each Cell}}: The algorithm fully extracts each cell, including not only the point IDs but also its actual points, leading to increased memory accesses. These points are necessary for unique insertion into the point locator.
+    \item \fix{\textit{Use of Point Locator}}: The algorithm relies on a point locator, introducing additional computational overhead.
+    \item \fix{\textit{Incrementally Built Data Structures}}: The algorithm relies on incrementally building data structures by inserting cells and points while ensuring unique point insertion, thereby impeding independent processing. This incremental approach significantly affects the algorithm's scalability and prevents parallelization. Additionally, this leads to incremental memory allocations, contributing to potential inefficiencies in memory usage.
+\end{itemize}
 
 A subsequent clip algorithm by Meredith \cite{Clip}, initially incorporated into VisIt \cite{VisIt} under the \texttt{vtkVisItClipper} class and later integrated into the VTK library within the \texttt{vtkTableBasedClipDataSet} class, comprises four main passes.
 First, it extracts the point IDs of each input cell, computes its case index to access a case table, and stores its associated output cells into intermediate type-specific connection arrays with temporary point IDs. In the second pass, the number of edge points and centroid points is known, and the number of kept points is determined by constructing a point map. Third, it extracts the output points. Finally, it traverses each intermediate type-specific connection array, renumbers the point IDs of each cell based on the number of kept points, edge points, and centroid points, and writes them into the output cells. Although this algorithm eliminates the use of a point locator and does not fully extract each cell, it still involves incremental memory allocations due to incremental data structure building. Moreover, it has the following additional deficiencies:
 
-\begin{enumerate}
-    \item \textbf{Increased Memory Footprint}: The algorithm produces intermediate type-specific connection arrays, nearly doubling the memory requirements for output cells.
-    \item \textbf{Computational Overhead}: The algorithm requires duplicating the writing of point IDs for each output cell, introducing computational overhead.
-\end{enumerate}
+\begin{itemize}
+    \item \fix{\textit{Increased Memory Footprint}}: The algorithm produces intermediate type-specific connection arrays, nearly doubling the memory requirements for output cells.
+    \item \fix{\textit{Computational Overhead}}: The algorithm requires duplicating the writing of point IDs for each output cell, introducing computational overhead.
+\end{itemize}
 
 Moreland et al. \cite{ClassSciViz} analyzed widely employed algorithms in the Scientific Visualization domain, categorizing the clip algorithm within the algorithmic class named \textit{Build Connected Topology}. This class poses a significant challenge for parallelization in Scientific Visualization due to its technical complexity, notably stemming from a lack of prior knowledge regarding the output size. Moreland's analysis sparked the collaborative creation of the VTK-m library \cite{VTKm}. VTK-m provides a collection of algorithms originally found in the VTK library, specifically designed to support various many-core processors, such as CPUs and GPUs.
 
 VTK-m's clip algorithm, implemented within the \texttt{vtkmClip} class, is parallel by design, leveraging simple and reusable parallel primitives as presented by Moreland et al. \cite{MCD3}. These primitives significantly reduce developer costs. The algorithm achieves independent processing through multiple passes. Instead of generating intermediate type-specific connection arrays with temporary point IDs, for each cell several accumulators are used to compute cell statistics. These statistics are then transformed into offsets using a parallel prefix-sum operation, ensuring that the output can be written once with the correct point IDs. Although this algorithm effectively addresses the previous limitations of both sequential algorithms and is inherently parallel, even for GPUs, it exhibits two new important deficiencies:
 
-\begin{enumerate}
-    \item \textbf{Increased Memory Footprint}: The algorithm's storage of cell statistics significantly increases the memory footprint, as these statistics are stored for each cell.
-    \item \textbf{Computational Overhead}: The prefix sum computation, converting the accumulators to offsets, is expensive since it is applied to all cells instead of batches of cells. 
-\end{enumerate}
+\begin{itemize}
+    \item \fix{\textit{Increased Memory Footprint}}: The algorithm's storage of cell statistics significantly increases the memory footprint, as these statistics are stored for each cell.
+    \item \fix{\textit{Computational Overhead}}: The prefix sum computation, converting the accumulators to offsets, is expensive since it is applied to all cells instead of batches of cells. 
+\end{itemize}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PROBLEM DEFINITION
@@ -410,7 +408,7 @@ The computation of kept points $KP$ requires the creation of a point map $M_P$ o
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Sequential Clip Algorithm
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Sequential Clip Algorithm}
+\section{\fix{Existing Algorithm: Sequential Clip}}
 \label{sec:sequential-clip-algorithm}
 
 As described in Section \ref{sec:related-work}, Meredith's clip algorithm comprises four passes. Algorithm \ref{alg:seq-iso} provides a high-level description of its passes.
@@ -430,7 +428,7 @@ As described in Section \ref{sec:related-work}, Meredith's clip algorithm compri
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Pass 1}
+\subsection{\fix{Pass 1: Evaluate Cells}}
 
 Initially, the number of kept points $N_{KP}$, edge points $N_E$ and centroid points $N_{CEN}$, is not known. To characterize intermediate output cells' temporary point IDs, three $ID$ segments are defined:  $0 \leq ID < N_P$ (input point), $ID \geq N_P$ (edge point), and $ID < 0$ (centroid point).
 
@@ -440,16 +438,16 @@ For each output shape, its points are traversed, and their IDs are defined as fo
 
 After defining the point IDs, if the output shape is the special centroid, the centroid is defined using the IDs and incrementally inserted into $CEN$. For other shape types, the cell type is extracted, and the IDs are incrementally inserted into an intermediate type-specific connection array. Finally, upon completion, $N_{C'}$ (including $N_{CON'}$ and $N_{OF'}$), $N_E$, and $N_{CEN}$ become known.
 
-\subsection{Pass 2}
+\subsection{\fix{Pass 2: Define Point Map}}
 
 To compute $KP$, a point map $M_P$ of size $N_P$ is initialized to $-1$, and a $counter \gets 0$ is created. Next, the output point IDs of each cell in the intermediate type-specific connection arrays are traversed. If $0 \leq \textit{ID} < N_P$, and $m_{P_{ID}} = -1$, $m_{P_{ID}} \gets counter$ is set, and the counter is incremented. At the end of this loop, $N_{KP} \gets counter$ and $KP$ is derived
 from the non-negative entries in $M_P$.
 
-\subsection{Pass 3}
+\subsection{\fix{Pass 3: Extract Output Points}}
 
 In the third pass, the output points $P'$ are allocated, and the following types of points are inserted: the kept points $KP$, the edge points $E$ that are created using their two point IDs and their linear interpolation weight, and the centroid points $CEN$.
 
-\subsection{Pass 4}
+\subsection{\fix{Pass 4: Extract Output Cells}}
 
 In the fourth pass, the point IDs of each cell in the intermediate type-specific connection arrays are renumbered and written into the output cells $C'$. This renumbering is possible since $N_{KP}$, $N_E$ and $N_{CEN}$ are now known. First, the output cells $C'$ of size $N_{C'}$ are allocated. To populate $C'$, each intermediate type-specific connections array is traversed. For each cell, its type is inserted in $T'$, and its point IDs are renumbered as follows and written in $CON'$ by defining $OF'$:
 If $0 \leq ID < N_P$ (input point), then $ID \gets m_{P_{ID}}$.
@@ -459,10 +457,10 @@ If $\textit{ID} < 0 $ (centroid point), then $ID \gets N_{KP} + N_E - ID - 1$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Batch-Driven Parallel Clip Algorithm
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Batch-Driven Parallel Clip Algorithm}
+\section{\fix{Proposed Algorithm: Batch-Driven Parallel Clip}}
 \label{sec:batch-driven-parallel-clip-algorithm}
 
-The proposed batch-driven parallel clip algorithm comprises five passes aimed at enhancing parallel execution and eliminating all deficiencies mentioned in Section \ref{sec:related-work}. Algorithm \ref{alg:par-iso} provides a high-level description of its passes. Subsequent subsections offer comprehensive details on batch definition, intricate descriptions of each pass, and implementation details regarding workload trimming, memory footprint and access, load balancing, and parallel execution.
+The proposed batch-driven parallel clip algorithm comprises five passes aimed at enhancing parallel execution and eliminating all deficiencies mentioned in Section \ref{sec:related-work}. Algorithm \ref{alg:par-iso} provides a high-level description of its passes. Subsequent subsections offer comprehensive details on batch definition, \fix{detailed} descriptions of each pass, and implementation details regarding workload trimming, memory footprint and access, load balancing, and parallel execution.
 
 \begin{algorithm}
 % \scriptsize
@@ -486,11 +484,10 @@ Assume a set $A$, such as points or cells, of size $N_A$. $A$ can be partitioned
 
 Batches can be efficiently removed or trimmed if they meet specific criteria, such as having one of their accumulator variables equal to $0$, thereby enabling workload trimming. The accumulator variables of a batch, which is part of a collection of batches, can be leveraged to calculate global summations. Furthermore, these accumulator variables can be efficiently transformed in-place to offsets using a parallel prefix-sum.
 
-The configurability of the batch size $S_B$
-, which is evaluated in Section~\ref{sec:batch-size-and-trimming}, 
+The configurability of the batch size \fix{$S_B$}, which is evaluated in Section~\ref{sec:batch-size-and-trimming}, 
 significantly affects both run-time performance and memory footprint, showcasing noticeable enhancements or deterioration depending on the dataset size.
 
-\subsection{Pass 1}
+\subsection{\fix{Pass 1: Define Point Map}}
 \label{sec:par-pass-1}
 
 The batches of points $B_P$ have a size of $N_{B_P}$. Each batch $b_{P_k}$ has an accumulator variable for the number of kept points. Initially, the batches of points are traversed in parallel. For each scalar value $s_i$ of a point $p_i$ in batch $b_{P_k}$, if $s_i \ge v$, then $m_{p_i} \gets 1$, else $m_{p_i} \gets -1$. If $m_{p_i} = 1$, then the accumulator is incremented. Upon completion, the accumulator contains the number of kept points in the batch.
@@ -499,7 +496,7 @@ Subsequently, the batches whose accumulator of kept points is zero are trimmed. 
 
 Finally, the remaining batches of points are traversed in parallel again. Before traversing each batch $b_{P_k}$, a $counter \gets \text{offset}$ is created. For each $p_i$ in $b_{P_k}$, if $m_{p_i} = 1$, then $m_{p_i} \gets counter$ and the counter is incremented. Eventually, an $M_P$ equivalent to that generated in the sequential algorithm is defined, and $KP$ is determined.
 
-\subsection{Pass 2}
+\subsection{\fix{Pass 2: Evaluate Cells}}
 
 The batches of cells $B_C$ have a size of $N_{B_C}$. Each batch $b_{C_k}$ contains three accumulator variables: output connections' size, number of output cells, and number of centroid points. Initially, the batches of cells are traversed in parallel. For each cell $c_i$ in each batch $b_{C_k}$, its case index $ci_i$ is computed using $S_{c_i}$ to access a case table. Then, the number of output shapes is extracted, and the shapes are traversed.
 
@@ -507,11 +504,11 @@ For each output shape, its points are traversed. Any edge point is inserted into
 
 Once the batch processing is completed, the batches whose number of output cells accumulator is zero are trimmed. Subsequently, the global summation of all accumulators, including $N_{CON'}$, $N_{C'}$, and $N_{CEN}$, is computed, and the accumulators of each batch are converted to offsets. Finally, the thread-local edge points are merged.
 
-\subsection{Pass 3}
+\subsection{\fix{Pass 3: Create Edge Locator}}
 
 The merged edge points undergo parallel sorting, prioritizing the first point's ID and then the second point's ID. This sorting facilitates the identification of duplicate edge points through sequential traversal of the sorted edges, resulting in the formation of the unique edge points $E$ of size $N_E$. The $EL$ is created by defining beginning and ending offsets for each first point ID defining a static hash map. Given the two point IDs defining an edge, $EL$  enables the swift retrieval of a unique edge point ID.
 
-\subsection{Pass 4}
+\subsection{\fix{Pass 4: Extract Output Cells}}
 
 First, output arrays for $CON'$, $OF'$, and $T'$ are allocated using the value of $N_{CON'}$ and $N_{C'}$ computed in Pass 2. Likewise, an array $CEN$ to hold centroid points is allocated using $N_{CEN}$. Then, the trimmed batches of cells are traversed in parallel. For each cell $c_i$ in $b_{C_k}$, its case index $ci_i$ is used to access a case table. Then, the number of output shapes is extracted, and the shapes are traversed.
 
@@ -519,7 +516,7 @@ For each output shape, its points are traversed, and their IDs are defined as fo
 
 After defining the point IDs, if the output shape is the special centroid, the centroid is defined using the point IDs and is inserted into $CEN$. For other shape types, the cell type is extracted, and point IDs, offset, and cell type are written to $CON'$, $OF'$, and $T'$, respectively, at the correct memory position. This is facilitated by the offsets of the output connections' size and the number of output cells accumulators in $b_{C_k}$, computed at the end of Pass 2. All offsets are then appropriately incremented. Finally, the last offset value is assigned as $of'_{N_{C'}} =N_{CON'}$.
 
-\subsection{Pass 5}
+\subsection{\fix{Pass 5: Extract Output Points}}
 
 As described in Section ~\ref{sec:problem-definition}, there are three types of points: kept points, edge points, and centroid points. With the completion of Pass 4, all necessary information is available to define the output points $P'$. Firstly, the output points $P'$ of size $N_{P'} = N_{KP} + N_E + N_{CEN}$ are allocated. Afterwards, the trimmed batches of input points are traversed in parallel. For each point $p_i$ in $b_{P_k}$, if $m_{p_{i}} > 0$, it is written to $P'$ at position $m_{p_{i}}$. Subsequently, the edges $E$ are traversed in parallel. For each edge $e_i$ with two point IDs and a linear interpolation weight, the edge point is constructed and written to $P'$ at position $N_{KP} + i$. Finally, the centroid points $CEN$ are traversed in parallel. For each centroid $cen_i$, the centroid point is constructed and written to $P'$ at position $N_{KP} + N_E + i$.
 
@@ -528,23 +525,23 @@ As described in Section ~\ref{sec:problem-definition}, there are three types of 
 
 As most cells in a clip operation are either fully kept or entirely discarded, utilizing trimming techniques whenever feasible can significantly reduce the workload. To that end, the following two optimizations are implemented:
 
-\begin{enumerate}
-    \item \textbf{Trim Batches}: In Passes 1, 2, 4, and 5, the algorithm iterates over batches of points or cells. One motivation for this approach is to enable trimming point batches with no kept points in Pass 1 and cell batches that yield no output in Pass 2. As a result, in the second part of Pass 1, in Pass 4, and in Pass 5, fewer batches of points and cells are traversed, respectively, whenever possible.
-    \item \textbf{Store Case Index}: In Pass 2, we save the 8-bit case index of each cell. Although this requires additional memory, in Pass 4 it enables the quick determination of whether a cell is kept, clipped or discarded without recomputing it by re-accessing the scalars, and therefore, enabling quick cell trimming.
-\end{enumerate}
+\begin{itemize}
+    \item \fix{\textit{Trim Batches}}: In Passes 1, 2, 4, and 5, the algorithm iterates over batches of points or cells. One motivation for this approach is to enable trimming point batches with no kept points in Pass 1 and cell batches that yield no output in Pass 2. As a result, in the second part of Pass 1, in Pass 4, and in Pass 5, fewer batches of points and cells are traversed, respectively, whenever possible.
+    \item \fix{\textit{Store Case Index}}: In Pass 2, we save the 8-bit case index of each cell. Although this requires additional memory, in Pass 4 it enables the quick determination of whether a cell is kept, clipped or discarded without recomputing it by re-accessing the scalars, and therefore, enabling quick cell trimming.
+\end{itemize}
 
 \subsection{Memory Footprint and Access}
 \label{sec:memory-footprint-and-access}
 
 The clip algorithm is not inherently computationally expensive; therefore, its performance and scalability are constrained by memory bandwidth. It is crucial to minimize memory accesses by reducing the memory footprint and ensuring cache-friendly access or avoiding memory access whenever possible. To achieve this goal, the following five optimizations are implemented:
 
-\begin{enumerate}
-    \item \textbf{Optimize Case Tables}: The case tables used by the sequential clip algorithm, which consist of several arrays per cell type, are packed into one array that can be accessed using an index lookup table. This optimization ensures cache-friendly memory access, especially for input meshes containing more than one cell type. 
-    \item \textbf{Avoid Accessing Case Tables}: Using the case index, the determination of whether a cell is kept or discarded can be performed without accessing the case tables. Even with the optimized case tables, this improvement proves to be a significant fast-path, since the majority of the input cells are either kept or discarded, and only a small portion is clipped.
-    \item \textbf{Optimize Point Map Computation}: Instead of constructing the point map by traversing the point IDs of output cells to determine if they use an input point, as done in Meredith's and VTK-m's clip algorithms, our proposed algorithm traverses input points. It determines whether they are kept based on their scalar value, as described in Section \ref{sec:par-pass-1}. Traversing the cell connectivity is less cache-efficient because it writes values in the point map in a non-sequential order. Furthermore, points shared by adjacent cells will access the same point map entries multiple times.
-    \item \textbf{Minimize Accumulators' Memory Footprint}: In contrast to VTK-m's clip algorithm, the batch-driven parallel algorithm allows batches to store accumulators for a sequence of cells, not just one. The higher the batch size, the greater the memory footprint reduction benefit.
-    \item \textbf{Use 32-bit IDs}: The output cells and point map can be constructed using 32-bit IDs, whenever possible, instead of 64-bit IDs, leading to a halved memory footprint for both.
-\end{enumerate}
+\begin{itemize}
+    \item \fix{\textit{Optimize Point Map Computation}}: Instead of constructing the point map by traversing the point IDs of output cells to determine if they use an input point, as done in Meredith's and VTK-m's clip algorithms, our proposed algorithm traverses input points. It determines whether they are kept based on their scalar value, as described in Section \ref{sec:par-pass-1}. Traversing the cell connectivity is less cache-\fix{friendly} because it writes values in the point map in a non-sequential order. Furthermore, points shared by adjacent cells will access the same point map entries multiple times.
+    \item \fix{\textit{Use 32-bit IDs}}: \fix{If $N_C \leq 2,147,483,647$, the output cells and point map can be constructed using 32-bit IDs}, instead of 64-bit IDs, leading to a halved memory footprint for both.
+    \item \fix{\textit{Optimize Case Tables}}: The case tables used by the sequential clip algorithm, which consist of several arrays per cell type, are packed into one array that can be accessed using an index lookup table. This optimization ensures cache-friendly memory access, especially for input meshes containing more than one cell type. 
+    \item \fix{\textit{Avoid Accessing Case Tables}}: Using the case index, the determination of whether a cell is kept or discarded can be performed without accessing the case tables. Even with the optimized case tables, this improvement proves to be a significant fast-path, since the majority of the input cells are either kept or discarded, and only a small portion is clipped.
+    \item \fix{\textit{Minimize Accumulators' Memory Footprint}}: In contrast to VTK-m's clip algorithm, the batch-driven parallel algorithm allows batches to store accumulators for a sequence of cells, not just one. The higher the batch size, the greater the memory footprint reduction benefit.
+\end{itemize}
 
 \subsection{Load Balancing and Parallel Execution}
 \label{sec:load-balancing-and-parallel-execution}
@@ -558,46 +555,6 @@ The proposed batch-driven parallel clip algorithm has been seamlessly incorporat
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PERFORMANCE EVALUATION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Performance Evaluation}
-\label{sec:perf-eval}
-
-In this performance evaluation of clip algorithms, we assess the performance of Meredith's sequential algorithm (\textbf{clip-seq}), VTK-m's parallel algorithm (\textbf{clip-m-par}), and our batch-driven parallel algorithm (\textbf{clip-par}). VTK's first sequential algorithm, described in Section~\ref{sec:related-work}, is omitted from this evaluation as it is significantly slower than the others. While all algorithms are MPI-aware thanks to VTK's infrastructure, we opted not to use MPI because an algorithm would simply be executed independently on each node. Thus, analyzing beyond the desktop is unnecessary for the scope of this paper.
-
-The performance evaluation is performed on a computing node that has an Intel Xeon Gold 6226R processor with 16 physical and 32 logical cores (including 16 hyper-threads), and 64GB of DDR4 memory. All algorithms are executed within a Docker container, utilizing the GCC compiler 13.2.0, CMake 3.27.0, and TBB 2021.9 for a standardized evaluation environment  (see Appendix \ref{sec:appendix}).
-
-\subsection{Methods}
-
-We evaluated the clip algorithms' performance using four datasets (see Table~\ref{tab:datasets} and Figure~\ref{fig:datasets}) with varied sizes and cell distributions.
-
-For each execution of a clip algorithm, using a dataset with bounding box $bb = (Xmin, Xmax, Ymin, Ymax, Zmin, Zmax)$, a plane implicit function is used with a normal = $(1, 0, 0)$ and an origin = $(Xmin+(1-Per)*(Xmax-Xmin), \frac{Ymin+Ymax}{2}, \frac{Zmin+Zmax}{2})$, where $Per$ is a percentage variable that enables generating output meshes with different sizes. The run-time performance and memory footprint for each dataset is computed by averaging ten executions of an algorithm. The measurements exclude the reading of the dataset.
-
-\begin{table}[H]
-\centering
-\caption{Datasets' input size and output size for $\{20\%, 50\%, 80\%\}$ $Per$ values. M stands for millions and K for thousands.}
-\label{tab:datasets}
-\begin{tabular}{lllrrrr}
-\toprule
-\multicolumn{3}{c}{Dataset}                            & \multicolumn{1}{c}{Torso} & \multicolumn{1}{c}{CX-1} & \multicolumn{1}{c}{JSM} & \multicolumn{1}{c}{F-15} \\
-\midrule
-\multicolumn{2}{l}{\multirow{2}{*}{Input}}  &   $N_P$    &  1.4 M  &   8.2 M  &   50.4 M  &  116.4 M  \\
-\multicolumn{2}{l}{}                        &   $N_C$    &  2.9 M  &  16.2 M  &  120.0 M  &  246.1 M  \\
-\midrule
-\multirow{2}{*}{Per} & \multirow{2}{*}{20\%} &  $N_{P'}$  &  0.2 M  &   1.2 M  &    0.9 K  &    3.1 K  \\
-                     &                      &  $N_{C'}$  &  0.4 M  &   2.4 M  &    2.0 K  &    9.0 K  \\
-\midrule
-\multirow{2}{*}{Per} & \multirow{2}{*}{50\%} &  $N_{P'}$  &  0.7 M  &   3.1 M  &   35.3 M  &   91.0 M  \\
-                     &                      &  $N_{C'}$  &  1.5 M  &   6.2 M  &   83.0 M  &  192.0 M  \\
-\midrule
-\multirow{2}{*}{Per} & \multirow{2}{*}{80\%} &  $N_{P'}$  &  1.2 M  &   5.3 M  &   50.4 M  &  116.4 M  \\
-                     &                      &  $N_{C'}$  &  2.5 M  &  10.4 M  &  120.0 M  &  246.0 M  \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Batch Trimming and Size}
-\label{sec:batch-size-and-trimming}
-
-Figure \ref{fig:batch-trimming} clearly demonstrates the significant impact of trimming on the run-time of the clip-par algorithm across different batch sizes. Notably, the effects of batch trimming are most clearly demonstrated at $Per = 20\%$, highlighting its substantial efficacy. While the median run-time differences with and without trimming are smaller at $Per = 50\%$ and $Per = 80\%$, the reduction in run-time variance is noteworthy. Both aforementioned observations support that batch trimming enhances clip-par's algorithm performance. Therefore, batch trimming is consistently enabled in all subsequent executions.
 
 \begin{figure}[H]
   \centering
@@ -628,6 +585,45 @@ Figure \ref{fig:batch-trimming} clearly demonstrates the significant impact of t
   \label{fig:datasets}
 \end{figure}
 
+\section{Performance Evaluation}
+\label{sec:perf-eval}
+
+In this performance evaluation of clip algorithms, \fix{we assess the performance of Meredith's sequential algorithm (\textbf{clip-seq}) \cite{Clip}, VTK-m's parallel algorithm (\textbf{clip-m-par}) \cite{VTKm}, and our batch-driven parallel algorithm (\textbf{clip-par}). VTK's first sequential algorithm \cite{VTK} is omitted from this evaluation due to its significant slowness}. While all algorithms are MPI-aware thanks to VTK's infrastructure, we opted not to use MPI because an algorithm would simply be executed independently on each node. Thus, analyzing beyond the desktop is unnecessary for the scope of this paper.
+
+The performance evaluation is performed on a computing node that has an Intel Xeon Gold 6226R processor with 16 physical and 32 logical cores (including 16 hyper-threads), and 64GB of DDR4 memory. All algorithms are executed within a Docker container, utilizing the GCC compiler 13.2.0, CMake 3.27.0, and TBB 2021.9 for a standardized evaluation environment  (see Appendix \ref{sec:appendix}).
+
+\subsection{Methods}
+
+We evaluated the clip algorithms' performance using four datasets (see Table~\ref{tab:datasets} and Figure~\ref{fig:datasets}) with varied sizes and cell distributions. \fix{For each clip algorithm execution, a dataset is clipped using a plane implicit function with a normal vector $(1, 0, 0)$. Its origin is centered on the dataset's bounds along the y and z axes, while the percentage variable Per controls its position along the x-axis, enabling the creation of output meshes with different sizes. For Per values equal to 20\%, 50\%, and 80\%, we aim to clip most, half, and a small fraction of the dataset, respectively. The run-time and memory footprint are averaged over ten algorithm executions, excluding dataset reading.}
+
+\begin{table}[H]
+\centering
+\caption{Datasets' input size and output size for $\{20\%, 50\%, 80\%\}$ $Per$ values. M stands for millions and K for thousands.}
+\label{tab:datasets}
+\begin{tabular}{lllrrrr}
+\toprule
+\multicolumn{3}{c}{Dataset}                            & \multicolumn{1}{c}{Torso} & \multicolumn{1}{c}{CX-1} & \multicolumn{1}{c}{JSM} & \multicolumn{1}{c}{F-15} \\
+\midrule
+\multicolumn{2}{l}{\multirow{2}{*}{Input}}  &   $N_P$    &  1.4 M  &   8.2 M  &   50.4 M  &  116.4 M  \\
+\multicolumn{2}{l}{}                        &   $N_C$    &  2.9 M  &  16.2 M  &  120.0 M  &  246.1 M  \\
+\midrule
+\multirow{2}{*}{Per} & \multirow{2}{*}{20\%} &  $N_{P'}$  &  0.2 M  &   1.2 M  &    0.9 K  &    3.1 K  \\
+                     &                      &  $N_{C'}$  &  0.4 M  &   2.4 M  &    2.0 K  &    9.0 K  \\
+\midrule
+\multirow{2}{*}{Per} & \multirow{2}{*}{50\%} &  $N_{P'}$  &  0.7 M  &   3.1 M  &   35.3 M  &   91.0 M  \\
+                     &                      &  $N_{C'}$  &  1.5 M  &   6.2 M  &   83.0 M  &  192.0 M  \\
+\midrule
+\multirow{2}{*}{Per} & \multirow{2}{*}{80\%} &  $N_{P'}$  &  1.2 M  &   5.3 M  &   50.4 M  &  116.4 M  \\
+                     &                      &  $N_{C'}$  &  2.5 M  &  10.4 M  &  120.0 M  &  246.0 M  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Batch Trimming and Size}
+\label{sec:batch-size-and-trimming}
+Figure \ref{fig:batch-trimming} clearly demonstrates the significant impact of trimming on the run-time of the clip-par algorithm across different batch sizes. Notably, the effects of batch trimming are most clearly demonstrated at $Per = 20\%$, highlighting its substantial efficacy. While the median run-time differences with and without trimming are smaller at $Per = 50\%$ and $Per = 80\%$, \fix{since they generate more output cells}, the reduction in run-time variance is noteworthy. Both aforementioned observations support that batch trimming enhances clip-par's algorithm performance. Therefore, batch trimming is consistently enabled in all subsequent executions.
+
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{./Figures/Batch-Trimming.png}
@@ -638,7 +634,8 @@ Figure \ref{fig:batch-trimming} clearly demonstrates the significant impact of t
 \begin{figure}[H]
     \centering
     \includegraphics[width=\linewidth]{./Figures/Batch-Size}
-    \caption{Clip-par algorithm's normalized run-time distributions of different batch sizes, with trimming, for  $\{20\%, 50\%, 80\%\}$ $Per$ values, evaluated using the F-15 dataset, and employing 32 threads. Each run-time is divided by the average run-time with and without trimming for every $Per$ value.}
+    \caption{Clip-par algorithm's normalized run-time distributions of varying batch sizes, with trimming, \fix{constructed using the normalized run-times of $\{20\%, 50\%, 80\%\}$ $Per$ values}, evaluated using the F-15 dataset, and employing 32 threads. Each run-time is divided by the average run-time with and without trimming for every $Per$ value.
+    }
     \label{fig:batch-size}
 \end{figure}
 
@@ -682,7 +679,7 @@ clip-par   & 32 & 80\% &\textbf{20} &\textbf{18.15}&\textbf{95}&\textbf{22.83}&\
 \end{tabular}
 \end{table*}
 
-Table \ref{tab:run-time} showcases the run-time performance of clip-seq, clip-m-par, and clip-par algorithms. Notably, clip-par stands out with significant speed-ups over clip-seq of up to 3.12x on just 1 thread and up to 32.60x on 32 threads. This enhancement is credited to optimizations detailed in Sections \ref{sec:workload-trimming} and \ref{sec:memory-footprint-and-access} and is underscored by clip-seq's limitations in Section \ref{sec:related-work}. Conversely, clip-m-par shows a noticeable slowdown compared to clip-seq with a single thread, with sub-optimal speed-ups from 0.36x to 0.64x. Despite this, thanks to its parallel capabilities, clip-m-par achieves a noteworthy speed-up of up to 4.93x. The relative slowness of clip-m-par compared to clip-seq with a single thread is attributed to the usage of accumulators per cell. Overall, clip-par is always faster than clip-m-par on the same number of threads and faster than clip-seq on a single thread.
+Table \ref{tab:run-time} showcases the run-time performance of clip-seq, clip-m-par, and clip-par algorithms. Notably, clip-par stands out with significant speed-ups over clip-seq of up to 3.12x on just 1 thread and up to 32.60x on 32 threads. This enhancement is credited to optimizations detailed in Sections \ref{sec:workload-trimming} and \ref{sec:memory-footprint-and-access} and is underscored by clip-seq's limitations in Section \ref{sec:related-work}. Conversely, clip-m-par shows a noticeable slowdown compared to clip-seq with a single thread, with sub-optimal speed-ups from 0.36x to 0.64x. Despite this, thanks to its parallel capabilities, clip-m-par achieves a noteworthy speed-up of up to 4.93x. The relative slowness of clip-m-par compared to clip-seq with a single thread is attributed to the usage of accumulators per cell. Overall, clip-par is always faster than clip-m-par \fix{by up to 7.68x} on the same number of threads and faster than clip-seq on a single thread \fix{by up to 3.12x}.
 
 \begin{figure}[b]
   \centering
@@ -704,7 +701,7 @@ Table \ref{tab:run-time} showcases the run-time performance of clip-seq, clip-m-
 
 Overall, as illustrated in Figure \ref{fig:par-efficiency}, it is evident that clip-par demonstrates enhanced parallel efficiency compared to clip-m-par. With 16 and 32 threads, clip-par achieves efficiencies of 66\% and 42\%, respectively. The inability to reach 100\% efficiency is attributed to load balancing challenges, as discussed in Section ~\ref{sec:load-balancing-and-parallel-execution}, and memory bandwidth constraints, as noted in Section \ref{sec:memory-footprint-and-access}. The drop in parallel efficiency from 66\% to 42\% is expected due to the additional 16 threads being hyper-threads. Also, a discernible trend emerges: parallel efficiency declines as the number of threads increases. However, it is important to highlight that parallel efficiency improves with larger datasets.
 
-Table \ref{tab:pass-time} provides a breakdown of the run-time for each pass of the clip-par algorithm. Notably, Passes 4 and 5 show high sensitivity to the $Per$ value, highlighting their significant role in extracting the clipped output mesh. Additionally, Pass 3 emerges as the least resource-intensive among all passes. Lastly, the computation of scalar values using a plane implicit function and Pass 1 demonstrate comparatively lower parallel efficiency. 
+Table \ref{tab:pass-time} provides a breakdown of the run-time for each pass of the clip-par algorithm. Notable, \fix{since $Per$ directly influences the amount of output to extract, and Passes 4 and 5 extract the output, it's understandable that they exhibit high sensitivity to $Per$}. \fix{Moreover, Pass 3 emerges as the least resource-intensive pass, because $N_E << N_P, N_C$}. Lastly, \fix{the implicit function computation} and Pass 1 demonstrate comparatively lower parallel efficiency.
 
 \begin{table}[h]
 \centering
