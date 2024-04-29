@@ -1,20 +1,22 @@
 %%%%%%%%%%%%%%%%%%%%%% start of egpubl.cls %%%%%%%%%%%%%%%%%%%%%%
-\def\fileversion{3.90}
-\def\filedate{2023/09/06}
-\def\docdate {2023/09/06}
+\def\fileversion{3.92}
+\def\filedate{2023/12/14}
+\def\docdate {2023/12/14}
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesClass{egpubl}[\filedate \space
                        Document Style for EG Publications v\fileversion ]
 %
 % EG Publications document style
 % (based on EG Annual Event document style, which in turn was based on CFG Journal)
-% Copyright (c) 1997-2023 D.Fellner
+% Copyright (c) 1997-2024 D.Fellner
 %
 % based on the original LaTeX ARTICLE DOCUMENT STYLE
 %    for LaTeX version 2.09 by Leslie Lamport
 % ...modifications by Sue Brooks, BUSS Ltd
 % ... and Graham White 8.ix.92
 % ...redesign for LaTeX2e and adaption to Conf. Proc. by D.Fellner
+% 23-12-14 SB  3.92 usage of page numbers in the form <pagenumber> of <totalpagenumbers> for all proceedings
+% 23-11-16 SB  3.91 usage of package lastpage
 % 23-09-06 SB  3.90 introduce \Wileypagenumber that shows <pagenumber> of <totalpagenumbers>
 %                   always starts with 1 of ...; implies changings for 
 %                   JournalPaper, ConferencePaper, STAR, SpecialIssuePaper, STAREurovis
@@ -1113,14 +1115,22 @@ submitted to \textit{#1}%
 \def\noEGpagenumber{\def\p@EGpagenumber{\mbox{}}}
 \def\EGpagenumber{\def\p@EGpagenumber{\thepage}}
 \def\noWileypagenumber{\def\p@Wileypagenumber{\mbox{}}}
-\def\Wileypagenumber{\def\p@Wileypagenumber{\thepage\  of \j@pEndPage}
+\usepackage{lastpage}
+
+\def\EGlocalpagenumber{\def\p@EGlocalpagenumber{\thepage\  of \pageref*{LastPage}}
+\def\@oddhead{\small \hfill \itshape \@shortauthor\ / \@shorttitle
+               \hfill \upshape \textrm{\p@EGlocalpagenumber}}
+\def\@evenhead{\small \upshape \textrm{\p@EGlocalpagenumber} \hfill
+                \itshape \@shortauthor\ / \@shorttitle \hfill}
+}
+
+\def\Wileypagenumber{\def\p@Wileypagenumber{\thepage\  of \pageref*{LastPage}}
 \def\@oddhead{\small \hfill \itshape \@shortauthor\ / \@shorttitle
                \hfill \upshape \textrm{\p@Wileypagenumber}}
-
 \def\@evenhead{\small \upshape \textrm{\p@Wileypagenumber} \hfill
                 \itshape \@shortauthor\ / \@shorttitle \hfill}
 }
-\EGpagenumber%
+%\EGpagenumber%
 %
 % ------ define Document Types
 %          JournalSubmission, JournalPaper  % for CGF regular issue%
@@ -1140,15 +1150,15 @@ submitted to \textit{#1}%
 %
 % -------
 \def\JournalSubmission{%
-\EGpagenumber%
+\Wileypagenumber%
 \copyrightTextTitPag{\p@journalSubmissionText{(\number\month/\number\year)}}
 \copyrightTextRunPag{\p@journalSubmissionText{(\number\month/\number\year)}}
 %% \pagerange{000--000}%
 \def\ps@titlepage{\let\@mkboth\@gobbletwo
  \def\@oddhead{\raisebox{\z@}[8pt][1pt]{\parbox{\textwidth}{\small
 %    \textit{Volume \j@volume} (\textit{\number\year}\/),
-   \textit{Volume xx} (\textit{200y}\/),         % Vol + year yet unknown !
-   \textit{Number z, \ pp.\ \j@pStartPage--\j@pEndPage}%
+   \textit{Volume xx} (\textit{20yy}\/),         % Vol + year yet unknown !
+   \textit{Number z, \ pp.\ \j@pStartPage--\pageref*{LastPage}}%
    \hfill
  }}}%
 %
@@ -1171,7 +1181,7 @@ submitted to \textit{#1}%
 \def\ps@titlepage{\let\@mkboth\@gobbletwo
  \def\@oddhead{\raisebox{\z@}[8pt][1pt]{\parbox{\textwidth}{\small
    \textit{Volume \j@volume} (\textit{\j@year}\/),
-   \textit{Number \j@issue\ pp.\ \j@pStartPage--\j@pEndPage}%
+   \textit{Number \j@issue\ pp.\ \j@pStartPage--\pageref*{LastPage}}%
    \hfill \@journal
  }}}%
 %
@@ -1184,7 +1194,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\ConferenceSubmission{%
-\EGpagenumber%
+\Wileypagenumber%
 \copyrightTextTitPag{\p@confSubmissionText{\p@ConfYear}}
 \copyrightTextRunPag{\p@confSubmissionText{\p@ConfYear}}
 \def\ps@titlepage{\let\@mkboth\@gobbletwo
@@ -1233,7 +1243,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\Tutorial{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1283,7 +1293,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\DC{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1302,7 +1312,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\Education{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1321,7 +1331,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\Poster{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1340,7 +1350,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\Areas{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1359,7 +1369,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\MedicalPrize{% since 2021 part of EuroVis Conference instead of Eurographics Conference
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1378,7 +1388,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\ShortPresentation{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1397,7 +1407,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\SpecialIssueSubmission{%
-\EGpagenumber%
+\Wileypagenumber%
 \copyrightTextTitPag{\p@SpecialIssueSubmissionText{\p@ConfName{} (\p@ConfYear})}
 \copyrightTextRunPag{\p@SpecialIssueSubmissionText{\p@ConfName{} (\p@ConfYear})}
 \def\ps@titlepage{\let\@mkboth\@gobbletwo
@@ -1449,13 +1459,13 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\WsSubmission{%
-\EGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@wsSubmissionText{\p@ConfName{} (\p@ConfYear})}
 \copyrightTextRunPag{\p@wsSubmissionText{\p@ConfName{} (\p@ConfYear})}
 \def\ps@titlepage{\let\@mkboth\@gobbletwo
  \def\@oddhead{\raisebox{\z@}[8pt][1pt]{\parbox{\textwidth}{\small
    \parbox[t]{.7\textwidth}{\sloppy\raggedright
-     \p@ConfName{} (\p@ConfYear), \ pp.\ \j@pStartPage--\j@pEndPage \\
+     \p@ConfName{} (\p@ConfYear), \ pp.\ \j@pStartPage--\pageref*{LastPage} \\
      \p@ConfEditors{} \p@ConfEditorStrg}}%
  }%
 }
@@ -1468,7 +1478,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\WsPaper{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1492,7 +1502,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\WsShortPaper{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1516,7 +1526,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\WsPoster{%
-\noEGpagenumber%
+\EGlocalpagenumber%%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1540,7 +1550,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\WsWiP{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1564,13 +1574,13 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\WsSubmissionJoint{%
-\EGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@wsSubmissionText{\p@ConfName{} (\p@ConfYear})}
 \copyrightTextRunPag{\p@wsSubmissionText{\p@ConfName{} (\p@ConfYear})}
 \def\ps@titlepage{\let\@mkboth\@gobbletwo
  \def\@oddhead{\raisebox{\z@}[8pt][1pt]{\parbox{\textwidth}{\small
    \parbox[t]{.7\textwidth}{\sloppy\raggedright
-     \p@ConfNameJoint{} (\p@ConfYear), \ pp.\ \j@pStartPage--\j@pEndPage \\
+     \p@ConfNameJoint{} (\p@ConfYear), \ pp.\ \j@pStartPage--\pageref*{LastPage} \\
      \p@ConfEditors{} \p@ConfEditorStrg}}%
  }%
 }
@@ -1583,7 +1593,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\WsPaperJoint{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1608,7 +1618,7 @@ submitted to \textit{#1}%
 % -------
 % -------    
 \def\WsPaperJointposter{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1633,7 +1643,7 @@ submitted to \textit{#1}%
 % -------
 % -------    
 \def\WsPaperJointdemo{%
-\noEGpagenumber%
+\EGlocalpagenumber%%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1657,7 +1667,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\Expressive{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1680,7 +1690,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\DigitalHeritagePaper{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextAuthors{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextAuthors{\p@ConfYear}}
 \def\ps@titlepage{\let\@mkboth\@gobbletwo
@@ -1700,7 +1710,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\PaperL2P{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextAuthors{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextAuthors{\p@ConfYear}}
 \def\ps@titlepage{\let\@mkboth\@gobbletwo
@@ -1750,7 +1760,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\EuroVisPoster{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1769,7 +1779,7 @@ submitted to \textit{#1}%
 }}
 % -------
 \def\EuroVisShort{%
-\noEGpagenumber%
+\EGlocalpagenumber%
 \copyrightTextTitPag{\p@copyrightTextEG{\p@ConfYear}}
 \copyrightTextRunPag{\p@copyrightTextEGodd{\p@ConfYear}}
  \def\@oddfoot{{\tiny\raisebox{\z@}[8pt][1pt]{\parbox[t]{20pc}{\sloppy
@@ -1794,11 +1804,11 @@ submitted to \textit{#1}%
 \def\ps@headings{\let\@mkboth\markboth
 %% DF
  \def\@oddhead{\small \hfill \itshape \@shortauthor\ / \@shorttitle
-               \hfill \upshape \textrm{\p@EGpagenumber}}
+               \hfill \upshape \textrm{\p@EGlocalpagenumber}}
 %%- \def\@oddfoot{\mbox{}\hfill submitted to EUROGRAPHICS \EGyear}
  \def\@oddfoot{\tiny \p@copyrightTextRunPag \hfill\mbox{}}
 %% DF
- \def\@evenhead{\small \upshape \textrm{\p@EGpagenumber} \hfill
+ \def\@evenhead{\small \upshape \textrm{\p@EGlocalpagenumber} \hfill
                 \itshape \@shortauthor\ / \@shorttitle \hfill}
 %%- \def\@evenfoot{submitted to EUROGRAPHICS '98\hfill\mbox{}}
  \def\@evenfoot{\mbox{}\hfill\tiny \p@copyrightTextRunPag}
@@ -1834,7 +1844,8 @@ submitted to \textit{#1}%
    \rightskip \@tocrmarg \parfillskip -\rightskip
    \parindent #2\relax \@afterindenttrue
    \interlinepenalty\@M \leavevmode
-   \@tempdima #3\relax #4\nobreak \hfill \nobreak
+   \@tempdima #3\relax #4\nobreak \hfill \nobreak #5 
+   %without page numbers in List of Tables/Figures: remove #5
 %% DF
 %    \hbox to\@pnumwidth{\hfil\reset@font\rm \ }\par}\fi}
    \hbox to\@pnumwidth{\hfil\reset@font\rmfamily \ }\par}\fi}
@@ -1853,7 +1864,7 @@ submitted to \textit{#1}%
   {\reset@font\normalsize\rmfamily
 %%
    \leavevmode \hspace*{3pc}
-   #1\hfil \hbox to\@pnumwidth{\hss \ }}\par
+   #1\hfil \hbox to\@pnumwidth{\hss #2 }}\par
    \nobreak \global\@nobreaktrue
    \everypar{\global\@nobreakfalse\everypar{}}\endgroup}
 \def\l@section#1#2{\addpenalty{\@secpenalty}
@@ -1865,7 +1876,7 @@ submitted to \textit{#1}%
   \parfillskip -\@pnumwidth \reset@font\rmfamily \leavevmode
 %%
   \advance\leftskip\@tempdima \hskip -\leftskip
-  #1\nobreak\hfil \nobreak\hbox to\@pnumwidth{\hss \ }\par
+  #1\nobreak\hfil \nobreak\hbox to\@pnumwidth{\hss #2 }\par
  \endgroup}
 \def\l@subsection{\@undottedtocline{2}{1.5em}{2.3em}}
 \def\l@subsubsection{\@undottedtocline{3}{3.8em}{3.2em}}
@@ -1873,13 +1884,17 @@ submitted to \textit{#1}%
 \def\l@subparagraph{\@undottedtocline{5}{10em}{5em}}
 \def\listoffigures{\@restonecolfalse
  \if@twocolumn\@restonecoltrue\onecolumn\fi
- \section*{List of Figures\@mkboth{List of Figures}{List of Figures}}
- \@starttoc{lof} \if@restonecol\twocolumn\fi}
+ \section*{List of Figures}\@mkboth{List of Figures}{List of Figures}
+ \@starttoc{lof} \if@restonecol\twocolumn\fi
+ }
+
 \def\l@figure{\@undottedtocline{1}{1.5em}{2.3em}}
 \def\listoftables{\@restonecolfalse
  \if@twocolumn\@restonecoltrue\onecolumn\fi
- \section*{List of Tables\@mkboth{List of Tables}{List of Tables}}
- \@starttoc{lot} \if@restonecol\twocolumn\fi}
+ \section*{List of Tables}\@mkboth{List of Tables}{List of Tables}
+ \@starttoc{lot} \if@restonecol\twocolumn\fi
+ }
+
 \let\l@table\l@figure
 
 %  ****************************************

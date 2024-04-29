@@ -104,7 +104,7 @@ FUNCTION {init.urlbst.variables}
   "[link]" 'linktextstring := % dummy link text; typically "[link]"
   "http://arxiv.org/abs/" 'eprinturl := % prefix to make URL from eprint ref
   "arXiv:" 'eprintprefix := % text prefix printed before eprint ref; typically "arXiv:"
-  "https://doi.org/" 'doiurl := % prefix to make URL from DOI
+  "http://dx.doi.org/" 'doiurl := % prefix to make URL from DOI
   "doi:" 'doiprefix :=      % text prefix printed before DOI ref; typically "doi:"
   "http://www.ncbi.nlm.nih.gov/pubmed/" 'pubmedurl := % prefix to make URL from PUBMED
   "PMID:" 'pubmedprefix :=      % text prefix printed before PUBMED ref; typically "PMID:"
